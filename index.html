@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1eee7">
+<title>인터랙션 랩 — 어니스트패밀리</title>
+<meta name="description" content="만지면 반응하는 웹, 여섯 가지 실험. 영상이 아니라 매 순간 계산되는 인터랙션.">
+<link rel="icon" href="assets/favicon.svg">
+<link rel="stylesheet" href="assets/lab.css">
+<script>document.documentElement.classList.add('js');</script>
+<style>
+  body.ix {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  .ix-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: max(16px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right)) 16px max(22px, env(safe-area-inset-left));
+    pointer-events: none;
+    transition: background-color 0.5s var(--ease-out), border-color 0.5s var(--ease-out);
+    border-bottom: 1px solid transparent;
+  }
+  .ix-header.is-solid { background: color-mix(in srgb, var(--paper) 88%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-color: var(--line); }
+  .ix-header a { pointer-events: auto; }
+  .ix-brand { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
+  .ix-brand span { color: var(--muted); font-weight: 600; margin-left: 6px; }
+  .ix-jump { font-size: 14px; font-weight: 600; display: inline-flex; gap: 8px; align-items: center; min-height: 40px; white-space: nowrap; }
+  .ix-jump .lab-arrow { transition: transform 0.5s var(--ease-out); }
+  .ix-jump:hover .lab-arrow { transform: translateY(3px); }
+
+  .ix-hero { position: relative; height: 100vh; height: 100svh; min-height: 560px; overflow: hidden; }
+  .ix-hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: pan-y; }
+  .ix-hero-copy {
+    position: absolute;
+    left: max(22px, env(safe-area-inset-left));
+    right: max(22px, env(safe-area-inset-right));
+    bottom: max(28px, calc(env(safe-area-inset-bottom) + 20px));
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    pointer-events: none;
+  }
+  .ix-title { font-size: clamp(30px, 4.4vw, 64px); font-weight: 800; letter-spacing: -0.045em; line-height: 1.08; }
+  .ix-sub { margin-top: 14px; font-size: clamp(14px, 1.2vw, 17px); color: var(--muted); line-height: 1.65; max-width: 30em; word-break: keep-all; }
+  .ix-cue { font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; display: inline-flex; gap: 8px; align-items: center; }
+  .ix-cue i { display: block; width: 1px; height: 34px; background: var(--line); position: relative; overflow: hidden; }
+  .ix-cue i::after { content: ""; position: absolute; left: 0; top: -40%; width: 1px; height: 40%; background: var(--ink); animation: ix-cue 2.2s var(--ease-inout) infinite; }
+  @keyframes ix-cue { from { transform: translateY(0); } to { transform: translateY(350%); } }
+
+  .ix-reveal { display: block; overflow: hidden; }
+  .ix-reveal > span { display: block; transition: transform 1.1s var(--ease-out), opacity 1.1s var(--ease-out); }
+  .js .ix-hero .ix-reveal > span { transform: translateY(105%); }
+  .js .ix-hero.is-in .ix-reveal > span { transform: none; }
+  .js .ix-hero.is-in .ix-reveal:nth-child(2) > span { transition-delay: 0.08s; }
+  .js .ix-hero .ix-sub, .js .ix-hero .ix-cue { opacity: 0; transition: opacity 1.2s var(--ease-out) 0.5s; }
+  .js .ix-hero.is-in .ix-sub, .js .ix-hero.is-in .ix-cue { opacity: 1; }
+
+  .ix-list { padding: 12vh max(22px, env(safe-area-inset-right)) 6vh max(22px, env(safe-area-inset-left)); }
+  .ix-list-head { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--muted); padding-bottom: 16px; }
+  .ix-rows { list-style: none; }
+  .ix-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) minmax(200px, 300px) 36px;
+    align-items: center;
+    gap: 24px;
+    padding: clamp(22px, 3vw, 38px) 0;
+    transition: opacity 0.45s var(--ease-out);
+  }
+  .ix-row::before, .ix-rows li:last-child .ix-row::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--line);
+    transform-origin: left center;
+    transition: transform 1.2s var(--ease-out);
+  }
+  .ix-row::before { top: 0; }
+  .ix-rows li:last-child .ix-row::after { bottom: 0; }
+  .js .ix-row::before, .js .ix-rows li:last-child .ix-row::after { transform: scaleX(0); }
+  .js .ix-row.is-in::before, .js .ix-rows li:last-child .ix-row.is-in::after { transform: scaleX(1); }
+  .ix-no { font-size: 14px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .ix-name { font-size: clamp(34px, 5.6vw, 92px); font-weight: 800; letter-spacing: -0.05em; line-height: 1.02; transition: transform 0.6s var(--ease-out); }
+  .js .ix-row .ix-name > span { transform: translateY(105%); }
+  .js .ix-row.is-in .ix-name > span { transform: none; }
+  .ix-desc { font-size: 15px; color: var(--muted); line-height: 1.6; word-break: keep-all; }
+  .ix-desc b { display: block; color: var(--ink); font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+  .js .ix-row .ix-desc, .js .ix-row .ix-no, .js .ix-row .ix-go { opacity: 0; transition: opacity 1s var(--ease-out) 0.25s; }
+  .js .ix-row.is-in .ix-desc, .js .ix-row.is-in .ix-no, .js .ix-row.is-in .ix-go { opacity: 1; }
+  .ix-go { justify-self: end; font-size: 22px; }
+  .ix-go span { display: inline-block; transition: transform 0.5s var(--ease-out); }
+  .ix-media { display: none; }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ix-rows:hover .ix-row { opacity: 0.32; }
+    .ix-rows .ix-row:hover { opacity: 1; }
+    .ix-row:hover .ix-name { transform: translateX(14px); }
+    .ix-row:hover .ix-go span { transform: translateX(6px); }
+  }
+
+  .ix-preview {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 25;
+    width: clamp(260px, 24vw, 380px);
+    aspect-ratio: 16 / 10;
+    pointer-events: none;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #e6e2d8;
+    clip-path: inset(50% 50% 50% 50% round 6px);
+    transition: clip-path 0.7s var(--ease-out);
+    will-change: transform;
+  }
+  .ix-preview.is-on { clip-path: inset(0 0 0 0 round 6px); }
+  .ix-preview video { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .ix-how { padding: 10vh max(22px, env(safe-area-inset-right)) 12vh max(22px, env(safe-area-inset-left)); }
+  .ix-how h2 { font-size: clamp(26px, 3.6vw, 52px); font-weight: 800; letter-spacing: -0.045em; line-height: 1.18; word-break: keep-all; }
+  .ix-how ol { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; margin-top: 7vh; counter-reset: how; }
+  .ix-how li { border-top: 1px solid var(--ink); padding-top: 18px; counter-increment: how; }
+  .ix-how li::before { content: "0" counter(how); display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 26px; font-variant-numeric: tabular-nums; }
+  .ix-how b { display: block; font-size: 19px; font-weight: 700; letter-spacing: -0.02em; }
+  .ix-how p { margin-top: 10px; font-size: 15px; color: var(--muted); line-height: 1.7; word-break: keep-all; }
+
+  .ix-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    padding: 0 max(22px, env(safe-area-inset-right)) max(26px, env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left));
+  }
+  .ix-foot-start { font-size: clamp(26px, 3vw, 44px); font-weight: 800; letter-spacing: -0.04em; display: inline-flex; align-items: center; gap: 14px; }
+  .ix-foot-start .lab-arrow { transition: transform 0.6s var(--ease-out); }
+  .ix-foot-start:hover .lab-arrow { transform: translateX(8px); }
+  .ix-foot small { font-size: 13px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+
+  @media (max-width: 760px) {
+    .ix-brand span { display: none; }
+    .ix-hero-copy { flex-direction: column; align-items: flex-start; gap: 18px; }
+    .ix-cue { display: none; }
+    .ix-row { grid-template-columns: 36px minmax(0, 1fr) 24px; gap: 12px 14px; padding: 26px 0 30px; }
+    .ix-media { display: block; grid-column: 1 / -1; order: -1; aspect-ratio: 16 / 10; border-radius: 6px; overflow: hidden; background: #e6e2d8; }
+    .ix-media video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .ix-desc { grid-column: 2 / -1; font-size: 14px; }
+    .ix-go { grid-row: 2; grid-column: 3; font-size: 18px; }
+    .ix-how ol { grid-template-columns: 1fr; gap: 26px; }
+    .ix-how li::before { margin-bottom: 12px; }
+    .ix-foot { flex-direction: column; align-items: flex-start; }
+  }
+
+  @media (min-width: 761px) and (max-width: 1100px) {
+    .ix-row { grid-template-columns: 48px minmax(0, 1fr) minmax(180px, 240px) 28px; gap: 18px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ix-reveal > span, .ix-name, .ix-row::before { transition: none !important; }
+    .js .ix-hero .ix-reveal > span, .js .ix-row .ix-name > span { transform: none; }
+    .js .ix-row::before, .js .ix-rows li:last-child .ix-row::after { transform: none; }
+    .js .ix-row .ix-desc, .js .ix-row .ix-no, .js .ix-row .ix-go, .js .ix-hero .ix-sub, .js .ix-hero .ix-cue { opacity: 1; }
+    .ix-cue i::after { animation: none; }
+  }
+</style>
+</head>
+<body class="ix">
+<header class="ix-header">
+  <a class="ix-brand" href="./">어니스트패밀리<span>인터랙션 랩</span></a>
+  <a class="ix-jump" href="#list">실험 6개 <span class="lab-arrow">↓</span></a>
+</header>
+
+<section class="ix-hero" aria-label="소개">
+  <canvas id="hero" aria-label="손으로 흩뜨릴 수 있는 글자"></canvas>
+  <div class="ix-hero-copy">
+    <div>
+      <h1 class="ix-title"><span class="ix-reveal"><span>만지면 반응하는 웹,</span></span><span class="ix-reveal"><span>여섯 가지 실험</span></span></h1>
+      <p class="ix-sub">위 글자를 손가락이나 마우스로 문질러 보세요. 아래 실험은 전부 영상이 아니라, 손이 닿는 순간마다 새로 계산됩니다.</p>
+    </div>
+    <span class="ix-cue"><i></i>내려서 보기</span>
+  </div>
+</section>
+
+<section class="ix-list" id="list" aria-label="실험 목록">
+  <div class="ix-list-head"><span>실험</span><span>06</span></div>
+  <ol class="ix-rows">
+    <li><a class="ix-row" href="type/" data-video="previews/type.mp4" data-poster="previews/type.jpg">
+      <span class="ix-media"></span>
+      <span class="ix-no">01</span>
+      <span class="ix-name ix-reveal"><span>한글 파티클</span></span>
+      <span class="ix-desc"><b>입자 물리 · 스프링</b>글자 하나가 점 수천 개. 밀면 흩어지고, 길게 누르면 소용돌이로 빨려 듭니다.</span>
+      <span class="ix-go"><span>→</span></span>
+    </a></li>
+    <li><a class="ix-row" href="ink/" data-video="previews/ink.mp4" data-poster="previews/ink.jpg">
+      <span class="ix-media"></span>
+      <span class="ix-no">02</span>
+      <span class="ix-name ix-reveal"><span>수묵 유체</span></span>
+      <span class="ix-desc"><b>유체 시뮬레이션 · WebGL</b>손끝으로 물을 저으면 한지 위 먹이 진짜 물처럼 번집니다.</span>
+      <span class="ix-go"><span>→</span></span>
+    </a></li>
+    <li><a class="ix-row" href="strings/" data-video="previews/strings.mp4" data-poster="previews/strings.jpg">
+      <span class="ix-media"></span>
+      <span class="ix-no">03</span>
+      <span class="ix-name ix-reveal"><span>가야금</span></span>
+      <span class="ix-desc"><b>현 진동 · 실시간 소리 합성</b>열두 줄을 손가락으로 쓸면 줄이 떨리고, 그 떨림으로 소리를 만듭니다.</span>
+      <span class="ix-go"><span>→</span></span>
+    </a></li>
+    <li><a class="ix-row" href="cloth/" data-video="previews/cloth.mp4" data-poster="previews/cloth.jpg">
+      <span class="ix-media"></span>
+      <span class="ix-no">04</span>
+      <span class="ix-name ix-reveal"><span>깃발</span></span>
+      <span class="ix-desc"><b>천 시뮬레이션 · 3D</b>벽에 걸린 천을 잡아당기고, 놓고, 빠르게 그으면 찢어집니다.</span>
+      <span class="ix-go"><span>→</span></span>
+    </a></li>
+    <li><a class="ix-row" href="contour/" data-video="previews/contour.mp4" data-poster="previews/contour.jpg">
+      <span class="ix-media"></span>
+      <span class="ix-no">05</span>
+      <span class="ix-name ix-reveal"><span>등고선</span></span>
+      <span class="ix-desc"><b>지형 생성 · 셰이더</b>누르면 산이 솟고 끌면 능선이 생기는, 살아 있는 지도.</span>
+      <span class="ix-go"><span>→</span></span>
+    </a></li>
+    <li><a class="ix-row" href="drop/" data-video="previews/drop.mp4" data-poster="previews/drop.jpg">
+      <span class="ix-media"></span>
+      <span class="ix-no">06</span>
+      <span class="ix-name ix-reveal"><span>떨어지는 글자</span></span>
+      <span class="ix-desc"><b>강체 물리 · 기울기 센서</b>글자를 잡아 던지고, 폰을 기울이면 글자가 쏟아집니다.</span>
+      <span class="ix-go"><span>→</span></span>
+    </a></li>
+  </ol>
+</section>
+
+<section class="ix-how" aria-label="만드는 방식">
+  <h2>정해진 영상을 틀지 않습니다.<br>손이 닿는 순간마다 계산합니다.</h2>
+  <ol>
+    <li><b>물리로 움직입니다</b><p>스프링·관성·마찰, 유체와 천의 방정식을 1초에 60번 풉니다. 같은 움직임이 두 번 나오지 않습니다.</p></li>
+    <li><b>손의 결을 읽습니다</b><p>누른 시간, 끄는 속도, 손가락 개수, 폰의 기울기에 따라 반응이 달라집니다.</p></li>
+    <li><b>폰에서도 부드럽게</b><p>화면 크기와 기기 성능을 재서 입자 수와 해상도를 스스로 맞춥니다.</p></li>
+  </ol>
+</section>
+
+<footer class="ix-foot">
+  <a class="ix-foot-start" href="type/">처음 실험부터 <span class="lab-arrow">→</span></a>
+  <small>어니스트패밀리 인터랙션 랩 · 2026</small>
+</footer>
+
+<div class="ix-preview" aria-hidden="true"><video muted loop playsinline preload="none"></video></div>
+
+<script src="type/particles.js"></script>
+<script src="assets/index.js"></script>
+</body>
+</html>

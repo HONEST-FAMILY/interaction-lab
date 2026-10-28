@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1eee7">
+<title>06 떨어지는 글자 — 인터랙션 랩</title>
+<link rel="icon" href="../assets/favicon.svg">
+<link rel="stylesheet" href="../assets/lab.css">
+<style>
+  .drop-tilt { display: none; }
+  body.can-tilt .drop-tilt { display: inline-flex; }
+  @media (max-width: 640px) {
+    .lab-count { display: none; }
+  }
+</style>
+</head>
+<body class="lab" style="--accent:#2f5bea">
+<main class="lab-stage"><canvas id="c" aria-label="떨어지는 글자 실험"></canvas></main>
+<div class="lab-ui">
+  <header class="lab-top">
+    <a class="lab-back" href="../"><span class="lab-arrow">←</span><span class="lab-roll"><span>인터랙션 랩</span><span>인터랙션 랩</span></span></a>
+    <div class="lab-right">
+      <button class="lab-btn drop-tilt" type="button" aria-pressed="false">기울이기</button>
+      <button class="lab-btn drop-float" type="button" aria-pressed="false">무중력</button>
+      <button class="lab-btn drop-reset" type="button" aria-label="다시 쌓기">다시</button>
+      <span class="lab-count">06 / 06</span>
+    </div>
+  </header>
+  <footer class="lab-bottom">
+    <div class="lab-meta"><strong>떨어지는 글자</strong><span>강체 물리 — 글자를 잡아 던지고, 빈 곳을 탭하면 하나 더 떨어집니다</span></div>
+    <a class="lab-next" href="../type/"><span class="lab-label-long">처음 실험</span><span class="lab-arrow">→</span></a>
+  </footer>
+</div>
+<div class="lab-hint">글자를 잡아서 던져 보세요</div>
+<script src="../assets/lab.js"></script>
+<script src="../lib/matter.min.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
