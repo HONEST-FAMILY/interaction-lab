@@ -33,6 +33,7 @@
 | 움직임 녹화 | `python tools/web/rec.py <주소> <시트.jpg> 1440 900 <steps.json> 4.5 18` | CDP 스크린캐스트를 시간 라벨 붙은 시트로. steps 예: `[["wait",1500],["scroll",300],["move",700,450,10],["down"],["up"],["click",x,y],["sel","#menu"],["js","window.scrollTo(0,3000)"]]` |
 | 폭 9개 | `PYTHONIOENCODING=utf-8 python tools/web/widths.py <주소> --out <폴더>` | 390·412·768·980·1024·1280·1440·1920·2560 가로 넘침·글자 가림·콘솔. '밖으로 나감'은 가로 레일이면 정상, 앱바 밑을 그 순간 지나가던 글자도 정상 |
 | 요소별 움직임·렉 | `python tools/motion_check.py <주소> <결과 폴더>` | 섹션별 등장·손 반응·숨은 글·싸구려 신호·CPU 4배 프레임 |
+| 폰 렉 재기 | `python tools/web/perf_mobile.py <주소> [- \| idle \| steps.json] [초]` | 폰(390×844·픽셀비 3·터치)+CPU 4배 느리게로 프레임(p90·33ms 넘는 장면 10초당)·레이아웃/스타일 재계산 횟수·'다시 그리는 층' 상위 8개(이름·크기·10초당 횟수). `-`=끝까지 천천히 스크롤, `idle`=가만히 두기, steps=`[["wait",ms],["scroll",dy],["scrollTo",y],["sel",css],["tap",x,y],["press",css],["js",code],["mark"]]`(`mark`=여기부터 재기 — 준비 동작은 빼고 잴 때). 합격: 33ms 넘는 장면 10초당 6번 이하·p90 17ms 이하. '다시 그리기 많음'은 힌트 — 원인을 찾아 일부러 움직이는 것(프레임 애니메이션의 이미지 바꾸기 등 작은 부분)이면 두고, 안 움직이는데 다시 그리면 고친다 |
 | 발행 | `python tools/web/publish.py <사이트 루트> <안 폴더…> --dest <프론트 저장소>/public/previews/<이름>-<이슈번호> [--push]` | HTML·CSS·JS에 문자열로 적힌 파일만 골라 담고 주석을 지운다. 밑줄로 시작하는 폴더(`_orig` 등)와 `lab`은 빠진다. `--push`면 dest 아래 같은 이름 폴더를 바꿔 넣는다 |
 
 기준서 틀: `templates/SPEC-common.md`(공통) · `templates/SPEC-site.md`(안마다). 본보기 시안: https://dashboard.honest-family.com/previews/interaction-1526/maekjeok/index.html (`maekjeok-2` · `maekjeok-3` · `museum` · `museum-2` · `museum-3`).
