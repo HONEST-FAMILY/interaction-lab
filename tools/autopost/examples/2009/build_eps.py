@@ -23,11 +23,11 @@ PAGE_TITLE = {
     'maek': '포트폴리오 · 맥적 고깃집 프랜차이즈 홈페이지',
 }
 DRAFTS = {
-    'ep1': [('1안', 'https://honest-family.com/showroom/cartoon-museum/mix/2/index.html'),
-            ('2안', 'https://honest-family.com/showroom/cartoon-museum/sketchbook/index.html')],
-    'maek': [('1안', 'https://honest-family.com/showroom/maekjeok/1/index.html'),
-             ('2안', 'https://honest-family.com/showroom/maekjeok/2/index.html'),
-             ('3안', 'https://honest-family.com/showroom/maekjeok/3/index.html')],
+    'ep1': [('1안 체험하기', 'https://honest-family.com/showroom/cartoon-museum/mix/2/index.html'),
+            ('2안 체험하기', 'https://honest-family.com/showroom/cartoon-museum/sketchbook/index.html')],
+    'maek': [('1안 체험하기', 'https://honest-family.com/showroom/maekjeok/1/index.html'),
+             ('2안(최종 채택) 체험하기', 'https://honest-family.com/showroom/maekjeok/2/index.html'),
+             ('3안 체험하기', 'https://honest-family.com/showroom/maekjeok/3/index.html')],
 }
 MEMO = {
     '두 시안이 움직이는 모습을 쭉 이어 붙이고, 인사말은 그 위에 얹습니다.': None,

@@ -15,9 +15,9 @@ def utm(url, content):
 
 
 DRAFTS = [
-    ('1안', utm(f'{SITE}/showroom/maekjeok/1/index.html', 'maekjeok_draft1')),
-    ('2안(최종 채택)', utm(f'{SITE}/showroom/maekjeok/2/index.html', 'maekjeok_draft2')),
-    ('3안', utm(f'{SITE}/showroom/maekjeok/3/index.html', 'maekjeok_draft3')),
+    ('1안 체험하기', utm(f'{SITE}/showroom/maekjeok/1/index.html', 'maekjeok_draft1')),
+    ('2안(최종 채택) 체험하기', utm(f'{SITE}/showroom/maekjeok/2/index.html', 'maekjeok_draft2')),
+    ('3안 체험하기', utm(f'{SITE}/showroom/maekjeok/3/index.html', 'maekjeok_draft3')),
 ]
 PRICE = utm(f'{SITE}/price', 'maekjeok')
 

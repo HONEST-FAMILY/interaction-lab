@@ -67,9 +67,12 @@ Plan file (JSON) for a new site
     "prescroll": true, "eager_images": true, "seed": 7, "phase_ms": 8.33,
     "ready_js": "JS that must be truthy before recording (e.g. app booted)", "load_retries": 4,
     "log_js": "optional JS expression logged per recorded frame (e.g. app state)",
+    "block_urls": ["hf-feedback"],                     (requests whose URL contains one of these are aborted)
+    "swap_files": {"/img/hero.webp": "C:/.../blur/hero.webp"},   (requests whose URL contains the key get the local file)
     "indicator": {"size": 28, "pressed_scale": 0.82, "fade": 0.18},
     "steps": [ ... ]
   }
+  timeline.json meta "routes" = how many requests were blocked / swapped (0 swapped = the keys did not match).
   steps (s = seconds; frames = round(s * fps); positions are CSS px of the viewport, or fractions
   of an element's box when "space" is a selector):
     {"do":"warmup","s":3}                       advance virtual time without recording (page settles)
@@ -92,6 +95,22 @@ Plan file (JSON) for a new site
   hide_css) so each frame lands on the planned position; rec_smooth's virtual rAF already steps its loop.
   Keep 60 fps scroll speed under ~25 px/frame and 30 fps under ~45 device px/frame for a calm look.
   Check timeline.json "pointer_on_time" (input delivered before the tick) and run smooth_check.py.
+
+Children's faces and customer contacts (portfolio videos are public)
+-------------------------------------------------------------------
+  Blur at the image source, not on the video: download the site's photos, blur the faces, and let the
+  recorder serve the blurred files through "swap_files". Every scroll position then shows blurred faces.
+    1) model (once): https://media.githubusercontent.com/media/opencv/opencv_zoo/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx
+       needs opencv-python >= 4.8 (cv2.FaceDetectorYN)
+    2) python -I face_blur.py <yunet.onnx> <orig_dir> <blur_dir> <check_sheet.jpg> [extra_faces.json]
+       detects at 1x/2x/3x, blurs an ellipse 45 % larger than each face, keeps format and transparency,
+       writes <blur_dir>/_faces.json and a sheet with red boxes. Look at the sheet: side faces, faces behind
+       hands and small faces in group photos are missed; add them by hand in extra_faces.json
+       {"card.jpg": [[x1, y1, x2, y2]]} and run again.
+    3) plan "swap_files": {"/img/<name>": "<blur_dir>/<name>"} for every photo with a person.
+  Phone numbers, e-mails and addresses in the header: hide_css with filter:blur(6px) on that element.
+  Do not film the footer or the contact section. Feedback widgets of preview hosts: "block_urls".
+  Example: plan_dr2_hero.json (dancingrainbow draft 2, 22 s, 11 photos swapped, header phone blurred).
 
 Outputs of rec_smooth.py: <out>/frames/f_%05d.png, <out>/timeline.json (per frame: virtual time,
 planned/actual scrollY, pointer, timers/rAF/animation counts, log_js value; segments; marks).

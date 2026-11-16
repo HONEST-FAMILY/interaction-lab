@@ -549,6 +549,34 @@ class Recorder:
             time.sleep(0.25)
         return False
 
+    def install_routes(self, ctx):
+        block = [b for b in self.plan.get("block_urls", []) if b]
+        swap = {k: Path(v) for k, v in self.plan.get("swap_files", {}).items() if k}
+        if not block and not swap:
+            return
+        for local in swap.values():
+            if not local.exists():
+                raise SystemExit(f"swap file missing: {local}")
+        mime = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp", ".svg": "image/svg+xml",
+                ".gif": "image/gif", ".avif": "image/avif", ".mp4": "video/mp4", ".css": "text/css", ".js": "text/javascript"}
+        hits = {"blocked": 0, "swapped": 0}
+
+        def handle(route):
+            url = route.request.url
+            if any(b in url for b in block):
+                hits["blocked"] += 1
+                return route.abort()
+            for key, local in swap.items():
+                if key in url:
+                    hits["swapped"] += 1
+                    return route.fulfill(status=200, body=local.read_bytes(),
+                                         headers={"Content-Type": mime.get(local.suffix.lower(), "application/octet-stream"), "Cache-Control": "no-store"})
+            return route.continue_()
+
+        ctx.route("**/*", handle)
+        self.route_hits = hits
+        self.say(f"routes: block {len(block)} pattern(s), swap {len(swap)} file(s)")
+
     def capture(self, res):
         shot = self.cdp.send("Page.captureScreenshot", {"format": "png", "optimizeForSpeed": True, "fromSurface": True, "captureBeyondViewport": False,
                                                         "clip": {"x": res["sx"], "y": res["sy"], "width": self.vw, "height": self.vh, "scale": self.shot_scale}})
@@ -569,6 +597,7 @@ class Recorder:
                     has_touch=self.mobile or self.mode == "touch", reduced_motion="no-preference", locale=self.plan.get("locale", "ko-KR"),
                 )
                 ctx.add_init_script(self.shim())
+                self.install_routes(ctx)
                 self.page = ctx.new_page()
                 self.cdp = ctx.new_cdp_session(self.page)
                 self.freeze()
@@ -616,7 +645,7 @@ class Recorder:
             "plan": self.plan.get("name", ""), "url": self.plan["url"], "fps": self.fps, "viewport": [self.vw, self.vh], "dpr": self.dpr,
             "size": list(getattr(self, "size", (0, 0))), "mode": self.mode, "recorded": self.rec_i, "virtual_frames": self.k,
             "pointer_on_time": self.ptr_checks, "marks": self.marks, "segments": self.segments, "frames": self.timeline,
-            "wall_seconds": round(time.time() - t_start, 1),
+            "wall_seconds": round(time.time() - t_start, 1), "routes": getattr(self, "route_hits", None),
         }
         (self.out / "timeline.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
         self.say(f"recorded {self.rec_i} frames ({self.rec_i / self.fps:.2f}s at {self.fps:g} fps) in {time.time() - t_start:.0f}s; pointer events on time {self.ptr_checks[0]}/{self.ptr_checks[1]}")
