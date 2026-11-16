@@ -1,0 +1,52 @@
+{
+  "name": "maek2_hero",
+  "url": "https://honest-family.com/showroom/maekjeok/2/index.html",
+  "viewport": [
+    1920,
+    1080
+  ],
+  "dpr": 1,
+  "mobile": false,
+  "fps": 60,
+  "pointer": "mouse",
+  "seed": 7,
+  "phase_ms": 8.333333333333334,
+  "prescroll": true,
+  "eager_images": true,
+  "hide_css": "[data-hf-cta],[data-hf-note]{display:none!important}",
+  "ready_js": "window.__nk && window.__nk.stats().W > 0",
+  "load_retries": 4,
+  "log_js": "window.__nk ? (() => { const s = window.__nk.stats(); return [s.drawn, s.opening, s.opened ? 1 : 0]; })() : null",
+  "indicator": {
+    "size": 28,
+    "pressed_scale": 0.82,
+    "fade": 0.18
+  },
+  "steps": [
+    {"do": "warmup", "s": 4.6, "label": "demo-burn"},
+    {"do": "mark", "name": "start"},
+    {"do": "hold", "s": 0.35, "label": "hero"},
+    {"do": "move", "space": "#nakhwa", "from": [0.3, 0.56], "to": [0.22, 0.38], "s": 0.32, "easing": "sine", "label": "pointer-in"},
+    {"do": "drag", "space": "#nakhwa", "path": [[0.22, 0.38], [0.64, 0.42], [0.3, 0.5], [0.7, 0.54], [0.36, 0.61], [0.58, 0.63]], "s": 2.4, "timing": "segments", "easing": "sine", "label": "rub"},
+    {"do": "leave", "s": 0.25, "label": "pointer-out"},
+    {"do": "hold", "s": 3.0, "label": "reveal"},
+    {"do": "mark", "name": "revealed"},
+    {"do": "scroll_to", "y": 1220, "s": 1.8, "easing": "smoothstep", "label": "name"},
+    {"do": "hold", "s": 1.0, "label": "name-hold"},
+    {"do": "scroll_to", "y": 2300, "s": 1.6, "easing": "smoothstep", "label": "year-357"},
+    {"do": "hold", "s": 1.0, "label": "year-hold"},
+    {"do": "scroll_to", "y": 3378, "s": 1.6, "easing": "smoothstep", "label": "film-1"},
+    {"do": "hold", "s": 0.8, "label": "film-1-hold"},
+    {"do": "scroll_to", "y": 3983, "s": 1.4, "easing": "smoothstep", "label": "film-2"},
+    {"do": "hold", "s": 1.0, "label": "film-2-hold"},
+    {"do": "scroll_to", "y": 4588, "s": 1.4, "easing": "smoothstep", "label": "film-3"},
+    {"do": "hold", "s": 1.0, "label": "film-3-hold"},
+    {"do": "mark", "name": "film3"},
+    {"do": "scroll_to", "y": 5900, "s": 1.8, "easing": "smoothstep", "label": "menu"},
+    {"do": "hold", "s": 1.2, "label": "menu-hold"},
+    {"do": "scroll_to", "y": 6950, "s": 1.4, "easing": "smoothstep", "label": "sets"},
+    {"do": "hold", "s": 0.8, "label": "sets-hold"},
+    {"do": "scroll_to", "y": 7960, "s": 1.6, "easing": "smoothstep", "label": "master"},
+    {"do": "hold", "s": 1.3, "label": "end-hold"}
+  ]
+}
