@@ -10,6 +10,7 @@
 
 | 단계 | 도구 | 결과 |
 |---|---|---|
+| 0. 필수 자료 | `find_background.py` (+ 기록은 `project_note.sh`) | 고객 프로젝트 정보에 의뢰 배경이 있는지, 찾아본 곳 한 줄 |
 | 1. 대본 데이터 | `examples/2009/script_data.py` 를 복사해 새 편 데이터로 | 장면 → 자료화면 그림 → 말 |
 | 2. 원고 대조 | `check_fidelity.py` | 대표 원고 문장이 대본에 글자 그대로 있는지 |
 | 3. 대본 페이지 | `examples/2009/build_eps.py` | 편마다 한 페이지 + 자료화면 묶음(zip) |
@@ -55,3 +56,28 @@ bash publish_blog.sh payload.json         # 운영 서버에서 브리지 키를
 ```
 
 영상 파일은 프론트 저장소 `public/blog-assets/video/(슬러그)/hero.mp4, hero.jpg, thumb.mp4, thumb.jpg`, 본문 그림은 `public/blog-assets/portfolio/(슬러그)/`. 글의 `video_url` 이 `…/hero.mp4` 면 글 맨 위와 목록 썸네일이 영상으로 바뀐다. 같은 `source_key` 로 다시 보내면 같은 글을 고친다.
+
+## 0. 필수 자료 — 의뢰 배경 찾기와 프로젝트 정보 기록
+
+포트폴리오 편은 의뢰 배경(어떤 고객인지 · 왜 홈페이지가 필요했는지 · 일정이나 조건 사정)이 있어야 대본을 끝낸다. 정본은 대시보드 **고객 프로젝트 화면의 '기본 정보' 칸 중 '메모'** 에 붙은 `[의뢰 배경 …]` 덩어리다.
+
+```
+python -I find_background.py 맥적 7998          # 브랜드 이름, 실행 번호 (DASHBOARD_API_URL·DASHBOARD_AGENT_TOKEN 환경변수 사용)
+```
+
+- 대시보드 대화 수집함 조회(`/agent/conversations/lookup`)로 이름이 맞는 고객 프로젝트 메모를 읽어 `has_background`, 덩어리 원문, 관련 이슈 번호, 그리고 보고에 그대로 붙일 `searched_line`(찾아본 곳 한 줄)을 낸다. 지금 실행 중인 이슈는 조회에서 빠지므로 그 이슈 원문·댓글은 따로 본다.
+
+대표가 의뢰 배경을 주면(또는 다른 이슈에서 찾으면) 고객 프로젝트 메모 끝에 붙인다. 로그인된 크롬(클로드 크롬 확장)이 있으면 화면에서 붙이고, 없으면 이 PC에서:
+
+```
+bash project_note.sh show 62 > before.json                        # 지금 메모를 받아 둔다(before_b64 = 원문)
+DRY=1 bash project_note.sh append 62 block.txt                    # 미리 보기, 아무것도 안 바뀜
+bash project_note.sh append 62 block.txt                          # 끝에만 붙임, 같은 덩어리가 있으면 already
+bash project_note.sh restore 62 backup.txt                        # 되돌리기: 받아 둔 원문으로, 그 뒤 다른 수정이 있으면 거절
+```
+
+`backup.txt` = `before.json` 의 `before_b64` 를 풀어 그대로 저장한 파일(줄바꿈 바꾸지 말 것).
+
+- `block.txt` 첫 줄 = `[의뢰 배경 · YYYY-MM-DD 대표 작성 — 이슈 #N]`, 다음 줄부터 대표 문장 그대로.
+- 운영 서버(`~/.ssh/honest-family.pem`)의 대시보드 백엔드에서 그 프로젝트 `notes` 만 고치고 감사 기록(`project.updated`)을 남긴다. 다른 칸·다른 프로젝트는 건드리지 않는다. 고객 프로젝트가 대시보드에 없으면 만들지 않는다.
+- 붙인 뒤 `find_background.py` 를 다시 돌려 `has_background: true` 를 확인한다. 첫 기록: 2026-11-16 맥적 전주본점(#62).
