@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from script_data import MAEK
+from script_data import MAEK, N, PRICE_CAP
 
 SITE = 'https://honest-family.com'
 IMG = f'{SITE}/blog-assets/portfolio/maekjeok'
@@ -20,6 +20,9 @@ DRAFTS = [
     ('3안 체험하기', utm(f'{SITE}/showroom/maekjeok/3/index.html', 'maekjeok_draft3')),
 ]
 PRICE = utm(f'{SITE}/price', 'maekjeok')
+# 가격 문장 끝에 붙이는 기준 표시 = 대본 가격 자막의 마지막 괄호 안 그대로 ('2026년 11월 가격표, 부가세 별도')
+PRICE_BASIS = PRICE_CAP[PRICE_CAP.rindex('(') + 1:PRICE_CAP.rindex(')')]
+assert '가격표' in PRICE_BASIS, PRICE_BASIS
 
 
 ALT = {
@@ -115,29 +118,39 @@ def body():
     for name, u in DRAFTS:
         out.append(f'- [{name}]({u})')
     out.append('')
+    # 마무리 = 대본의 '의뢰하고 싶다면?' 장면 그대로 (라이브러리 대본 틀 노트 '마무리 가격', 2026-11-17 대표 승인).
+    # 고정 두 문장 → 그날 가격표 숫자 문장(마지막 문장 끝에 기준 연·월) → 가격표 링크 → 끝인사. [자막] 줄은 글에 넣지 않는다.
     out.append('## 의뢰하고 싶다면?')
     out.append('')
-    out.append('이런 홈페이지를 제작하는 데 얼마나 드는지 궁금하신가요?')
+    ask = [t for k, t in scenes[7]['beats'][0]['lines'] if k == N]
+    head, prices, bye = ask[:2], ask[2:-2], ask[-1]
+    assert prices, '가격 문장이 없다. script_data 의 ASK(가격 자막, 가격 문장…) 을 그날 가격표로 채운다'
+    for t in head:
+        out.append(t)
+        out.append('')
+    for i, t in enumerate(prices):
+        if i == len(prices) - 1:
+            t = t.rstrip('.') + f'({PRICE_BASIS}).'
+        out.append(t)
+        out.append('')
+    out.append(f'가격표 전체는 [가격정찰제]({PRICE}) 링크를 참고하세요.')
     out.append('')
-    out.append('어니스트패밀리는 예산을 묻지 않고 가격정찰제로 운영합니다.')
-    out.append('')
-    out.append(f'가격이 궁금하다면 [가격정찰제]({PRICE}) 링크를 참고하세요.')
-    out.append('')
-    out.append('이상 어니스트패밀리였습니다. 감사합니다.')
+    out.append(bye)
     return '\n'.join(out).strip() + '\n'
 
 
 def payload():
-    intro = MAEK['scenes'][0]['beats'][0]['lines'][1][1]
+    # 제목 = 올리기 칸 제목 ①, 요약 = 인트로의 미리 알림 문장(질문 → 인사 → 소개 → 미리 알림 중 넷째)
+    preview = MAEK['scenes'][0]['beats'][0]['lines'][3][1]
     return {
         'source_key': 'portfolio:maekjeok',
-        'title': '고깃집 프랜차이즈 맥적의 홈페이지 제작 과정',
+        'title': MAEK['package']['titles'][0],
         'body': body(),
-        'excerpt': intro,
+        'excerpt': preview,
         'thumbnail': f'{VID}/thumb.jpg',
         'video_url': f'{VID}/hero.mp4',
         'target_keyword': '고깃집 홈페이지 제작',
-        'hashtags': ['고객사례', '홈페이지제작', '프랜차이즈홈페이지', '고깃집홈페이지', '맥적'],
+        'hashtags': ['고객사례', '홈페이지제작', '고깃집홈페이지', '프랜차이즈홈페이지', '맥적', '홈페이지제작비용'],
         'category': 'journal',
         'published': True,
     }
