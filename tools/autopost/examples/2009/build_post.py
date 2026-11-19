@@ -90,6 +90,14 @@ def join_lines(lines):
 def body():
     out = []
     scenes = {sc['n']: sc for sc in MAEK['scenes']}
+    # 대본의 '직접 써보고 싶다면?' 구간은 글에서는 이름을 바꿔 맨 위(맨 위 영상 바로 아래, 인트로 앞)에 둔다 (2026-11-19 대표).
+    out.append('## 글 읽기전 결과물 체험하기')
+    out.append('')
+    out.append('직접 써보고 싶으신 분들을 위해, 세 시안 모두 링크를 걸어두었습니다.')
+    out.append('')
+    for name, u in DRAFTS:
+        out.append(f'- [{name}]({u})')
+    out.append('')
     for k, t in scenes[0]['beats'][0]['lines']:
         out.append(t)
         out.append('')
@@ -111,13 +119,6 @@ def body():
             for f, cap in g['rest']:
                 out.append(img(f, cap))
                 out.append('')
-    out.append('## 직접 써보고 싶다면?')
-    out.append('')
-    out.append('직접 써보고 싶으신 분들을 위해, 세 시안 모두 링크를 걸어두었습니다.')
-    out.append('')
-    for name, u in DRAFTS:
-        out.append(f'- [{name}]({u})')
-    out.append('')
     # 마무리 = 대본의 '의뢰하고 싶다면?' 장면 그대로 (라이브러리 대본 틀 노트 '마무리 가격', 2026-11-17 대표 승인).
     # 고정 두 문장 → 그날 가격표 숫자 문장(마지막 문장 끝에 기준 연·월) → 가격표 링크 → 끝인사. [자막] 줄은 글에 넣지 않는다.
     out.append('## 의뢰하고 싶다면?')
