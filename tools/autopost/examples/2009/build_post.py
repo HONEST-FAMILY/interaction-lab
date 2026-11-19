@@ -98,6 +98,8 @@ def body():
     for name, u in DRAFTS:
         out.append(f'- [{name}]({u})')
     out.append('')
+    out.append('---')  # 체험 구간과 본문 사이 구분선 (2026-11-19 대표: 구분 없이 이어 붙이지 않는다)
+    out.append('')
     for k, t in scenes[0]['beats'][0]['lines']:
         out.append(t)
         out.append('')
