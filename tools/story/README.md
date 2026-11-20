@@ -9,9 +9,9 @@
 
 ```
 1) 원고 쓰기      example/content_example.py 를 복사해 고친다
-2) 만들기         python -I build_story.py 원고.py 출력폴더 [--board 판열쇠] [--seal-key-file 열쇠파일]
-3) 화면 점검      python C:/project/interaction-lab/tools/web/one.py python -I check_story.py 출력폴더 결과.json 416x525 "416x525,870x557,360x648,1440x900"
-4) 이어 보기 점검  python C:/project/interaction-lab/tools/web/one.py python -I probe_resume.py 출력폴더 story:판key 416x525,870x557
+2) 만들기         python -I C:/project/interaction-lab/tools/story/build_story.py 원고.py 출력폴더 [--board 판열쇠] [--seal-key-file 열쇠파일]
+3) 화면 점검      python C:/project/interaction-lab/tools/web/one.py python -I C:/project/interaction-lab/tools/story/check_story.py 출력폴더 결과.json 416x525 "416x525,870x557,360x648,1440x900"
+4) 이어 보기 점검  python C:/project/interaction-lab/tools/web/one.py python -I C:/project/interaction-lab/tools/story/probe_resume.py 출력폴더 story:원고의key 416x525,870x557
 5) 처음 읽는 사람 시험  출력폴더 옆에 생기는 <폴더이름>_story.txt 만 주고 예상 질문에 답하게 한다
 ```
 
@@ -83,6 +83,18 @@ DECK = {
 
 icon: lock · law · app · cards · chat · check · coin · gate · truck · vault.
 (pcard · album · search · scan · chat · msgr 은 첫 판(카드 거래소) 전용 그림이다.)
+
+## 자주 걸리는 것
+
+- 장 첫 카드에는 장 머리띠(약 60px)가 붙는다 — 그 카드 글은 더 짧게. 넘침은 대개 여기서 난다.
+- quiz 카드에는 remember·teaser 같은 상자가 그려지지 않는다 — 장 끝 예고는 문제 바로 앞 카드에 건다.
+- 상자 순서는 remember → tip → ban → teaser → buttons → links → note → more 로 고정이다.
+- vs 는 왼쪽(a)을 회색(옛것·틀린 것), 오른쪽(b)을 강조로 그린다 — 둘 다 맞는 비교엔 쓰지 말고 steps·doors 를 쓴다.
+- price 는 on: true 인 줄만 진하게, 나머지는 흐리게 그린다 — '들어가는 것 / 빠지는 것'에만. 셋 중 고르기는 numbers 카드.
+- doors 작은 그림(house 안, 폰 폭)은 문이 좁아 이름은 두 글자까지.
+- route 칸 수는 steps 수를 따른다(2~9걸음).
+- check_story.py 는 셋째 인자 크기의 장별 그림만 찍는다(결과이름_shots/크기/). 다른 크기 그림은 셋째 인자를 바꿔 한 번 더 돌린다.
+- 점검 도구는 문제를 하나씩 번갈아 틀리게 고른다 — 끝 장 점수가 절반쯤 나오는 게 정상이다.
 
 ## 질문 모으기 · 봉인
 

@@ -202,7 +202,7 @@
       route: function (p) {
         var on = arr(p.on);
         var lo = on.length ? Math.min.apply(null, on) : -1;
-        var h = '<div class="pic p-route"><div class="ends"><span>' + esc(p.from) + '</span><span>' + esc(p.to) + '</span></div><ol>';
+        var h = '<div class="pic p-route"><div class="ends"><span>' + esc(p.from) + '</span><span>' + esc(p.to) + '</span></div><ol style="--n:' + p.steps.length + '">';
         p.steps.forEach(function (s, k) {
           var cls = on.indexOf(k) >= 0 ? 'on' : (k < lo ? 'done' : '');
           h += '<li class="' + cls + '"><i>' + (k + 1) + '</i><span>' + esc(s) + '</span></li>';
