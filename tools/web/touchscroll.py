@@ -231,6 +231,9 @@ HTARGET = r"""
   for (const el of document.querySelectorAll(sel)) {
     const r0 = el.getBoundingClientRect();
     if (r0.width < 60 || r0.height < 20 || getComputedStyle(el).visibility === 'hidden') continue;
+    const ox = getComputedStyle(el).overflowX;
+    if (el._kvRail && !el._kvRail.on) continue;
+    if ((el.classList.contains('kv-rail') || ox === 'auto' || ox === 'scroll') && el.scrollWidth <= el.clientWidth + 2) continue;
     const y = Math.max(0, r0.top + T.y() - (vh - Math.min(r0.height, vh * 0.8)) / 2);
     return { y: y, w: r0.width, h: r0.height, el: T.desc(el) };
   }
