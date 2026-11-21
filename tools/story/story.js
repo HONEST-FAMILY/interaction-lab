@@ -123,7 +123,7 @@
       var s = null;
       try { s = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
       s = s || {};
-      var out = { v: 2, ref: s.ref || null, a: {}, seen: {}, seenAns: s.seenAns || {} };
+      var out = { v: 2, ref: s.ref || null, a: {}, seen: {}, seenAns: s.seenAns || {}, qf: s.qf === 'new' ? 'new' : 'all' };
       if (s.v === 2 || s.ref) { out.a = s.a || {}; out.seen = s.seen || {}; return out; }
       if (typeof s.i === 'number' && base[s.i]) out.ref = base[s.i].ref;
       Object.keys(s.a || {}).forEach(function (i) { if (base[i]) out.a[base[i].ref] = s.a[i]; });
@@ -146,6 +146,18 @@
     function drafts() { return allQuestions().filter(function (q) { return q.status === 'draft' && q.mine !== false; }); }
     function waiting() { return QA.list.filter(function (q) { return q.status === 'asked'; }); }
     function answered() { return QA.list.filter(function (q) { return q.status === 'answered' && q.answer; }); }
+    var openedNew = {}, only = null;
+    function isNewAns(q) { var s = S.seenAns[q.id]; return !s || (s !== 1 && !!q.answered_at && s !== q.answered_at); }
+    function newAnswers() { return answered().filter(isNewAns); }
+    function freshAns(q) { return isNewAns(q) || !!openedNew[q.id]; }
+    function onlyPos() { if (!only || cur < 0 || !cards[cur]) return -1; return only.indexOf(cards[cur].ref); }
+    function startOnly() {
+      var list = cards.filter(function (y) { return y.isAns && isNewAns(y.c.q); });
+      if (!list.length) { toast('안 읽은 답이 없어요.'); return; }
+      only = list.map(function (y) { return y.ref; });
+      closeSheet(); closeQ(); go(list[0].i, 1);
+    }
+    function markAllRead() { answered().forEach(function (q) { S.seenAns[q.id] = q.answered_at || 1; }); save(); }
     function stalled() { return !!(QA.handoff && ['failed', 'blocked', 'done'].indexOf(QA.handoff.phase) >= 0); }
 
     function rebuild() {
@@ -319,11 +331,8 @@
     function qaBanner(where) {
       if (!QA.on) return '';
       var h = '';
-      var news = answered().filter(function (q) { return !S.seenAns[q.id]; });
-      if (news.length) {
-        var first = byRef['a' + news[0].id];
-        h += '<div class="qa-ban new"><b>새 답 ' + news.length + '개가 왔어요</b><button type="button" data-goto="' + first + '">첫 답 보기</button></div>';
-      }
+      var news = newAnswers();
+      if (news.length) h += '<div class="qa-ban new"><b>안 읽은 답 ' + news.length + '개</b><button type="button" data-only="1">안 읽은 답만 보기</button></div>';
       var w = waiting();
       if (w.length && stalled()) h += '<div class="qa-ban wait"><b>질문 ' + w.length + '개에 아직 답이 없어요</b><button type="button" data-inbox="1">다시 보내기</button></div>';
       else if (w.length) h += '<div class="qa-ban wait"><b>질문 ' + w.length + '개에 AI가 답하는 중</b><span>' + esc(QA.handoff && QA.handoff.label || '곧 시작') + '</span></div>';
@@ -419,7 +428,7 @@
       answer: function (c, x) {
         var q = c.q;
         var who = q.mine === false && q.asked_by ? q.asked_by.name + ' 님이 물어본 것' : '물어본 것';
-        var h = '<div class="ans-tag">' + esc(who) + (q.answered_at ? ' · ' + esc(mmdd(q.answered_at)) + ' 답' : '') + '</div>';
+        var h = '<div class="ans-tags"><span class="ans-tag">' + esc(who) + (q.answered_at ? ' · ' + esc(mmdd(q.answered_at)) + ' 답' : '') + '</span>' + (freshAns(q) ? '<span class="ans-new">새 답</span>' : '<span class="ans-read">읽음</span>') + '</div>';
         h += '<div class="ans-q"><span class="qm" aria-hidden="true">Q</span><div><p>' + esc(q.body) + '</p><small>' + esc(labelOf(cards[byRef[x.anchor]] || x)) + ' 장에서</small></div></div>';
         h += '<div class="ans-a">' + paras(q.answer).map(function (p) { return '<p>' + fmt(p) + '</p>'; }).join('') + '</div>';
         if (q.fixed) h += '<div class="box remember"><span class="lab">고친 장</span>이 답에 맞춰 바로 앞 장을 고쳤어요.</div>';
@@ -458,6 +467,13 @@
       else if (nc.ci !== x.ci && D.chapters[nc.ci].no) { nextBtn.textContent = D.chapters[nc.ci].no + '으로'; nextBtn.className = 'next'; }
       else if (x.c.type === 'quiz' && S.a[x.ref] == null) { nextBtn.textContent = '건너뛰기'; nextBtn.className = 'next soft'; }
       else { nextBtn.textContent = '다음'; nextBtn.className = 'next'; }
+      var op = onlyPos();
+      if (op >= 0) {
+        topLabel.innerHTML = esc(ch.no ? ch.no + ' · ' + ch.title : ch.title) + '<small>안 읽은 답만 보는 중 · ' + (op + 1) + ' / ' + only.length + '</small>';
+        prevBtn.disabled = op === 0;
+        nextBtn.textContent = op < only.length - 1 ? '다음 안 읽은 답' : '다 읽었어요';
+        nextBtn.className = 'next ans';
+      }
       paintQ();
     }
 
@@ -472,7 +488,16 @@
         });
       });
       root.querySelectorAll('[data-goto]').forEach(function (b) {
-        b.addEventListener('click', function () { closeSheet(); closeQ(); go(+b.getAttribute('data-goto'), 1); });
+        b.addEventListener('click', function () { closeSheet(); closeQ(); only = null; go(+b.getAttribute('data-goto'), 1); });
+      });
+      root.querySelectorAll('[data-only]').forEach(function (b) {
+        b.addEventListener('click', function () { startOnly(); });
+      });
+      root.querySelectorAll('[data-allread]').forEach(function (b) {
+        b.addEventListener('click', function () { markAllRead(); toast('모두 읽음으로 바꿨어요.'); if (qview === 'inbox') openInbox(); paintQ(); });
+      });
+      root.querySelectorAll('[data-qf]').forEach(function (b) {
+        b.addEventListener('click', function () { S.qf = b.getAttribute('data-qf'); save(); openInbox(); });
       });
       root.querySelectorAll('[data-more]').forEach(function (b) {
         var label = (x.c.more && x.c.more.label) || '근거 보기';
@@ -504,6 +529,8 @@
       var el = document.createElement('article');
       el.className = 'card' + (x.isAns ? ' is-answer' : '') + (stay ? '' : (dir > 0 ? ' in-next' : (dir < 0 ? ' in-prev' : '')));
       el.setAttribute('aria-live', 'polite');
+      if (x.isAns && isNewAns(x.c.q)) openedNew[x.c.q.id] = 1;
+      if (only && only.indexOf(x.ref) < 0) only = null;
       el.innerHTML = renderCard(x);
       var keepScroll = stay ? stage.scrollTop : 0;
       stage.innerHTML = '';
@@ -512,7 +539,7 @@
       bind(el, x);
       el.querySelectorAll('img').forEach(function (im) { im.addEventListener('load', hintCheck); });
       cur = i;
-      if (x.isAns) S.seenAns[x.c.q.id] = 1; else S.seen[x.ref] = 1;
+      if (x.isAns) S.seenAns[x.c.q.id] = x.c.q.answered_at || 1; else S.seen[x.ref] = 1;
       if (i > 0) S.ref = x.ref;
       save();
       paintTop(x);
@@ -533,8 +560,19 @@
     window.addEventListener('resize', hintCheck);
     hint.addEventListener('click', function () { stage.scrollBy({ top: Math.round(stage.clientHeight * 0.7), behavior: 'smooth' }); });
 
-    function next() { if (cur < N - 1) go(cur + 1, 1); else go(0, -1); }
-    function prev() { if (cur > 0) go(cur - 1, -1); }
+    function next() {
+      var op = onlyPos();
+      if (op >= 0) {
+        if (op < only.length - 1 && byRef[only[op + 1]] != null) { go(byRef[only[op + 1]], 1); return; }
+        only = null; paintTop(cards[cur]); toast('안 읽은 답을 다 읽었어요. 이제 다음을 누르면 이야기로 이어져요.', 2600); return;
+      }
+      if (cur < N - 1) go(cur + 1, 1); else go(0, -1);
+    }
+    function prev() {
+      var op = onlyPos();
+      if (op >= 0) { if (op > 0 && byRef[only[op - 1]] != null) go(byRef[only[op - 1]], -1); return; }
+      if (cur > 0) go(cur - 1, -1);
+    }
     nextBtn.addEventListener('click', next);
     prevBtn.addEventListener('click', prev);
 
@@ -578,11 +616,11 @@
     qsheet.addEventListener('click', function (e) { if (e.target === qsheet) closeQ(); });
 
     function chip(q) {
-      var t = q.status === 'answered' ? '답 옴' : (q.status === 'asked' ? '답 기다리는 중' : (q.local ? '이 기기에만 모아 둠' : '모아 둠'));
-      return '<span class="st-chip st-' + esc(q.status) + '">' + t + '</span>';
+      var t = q.status === 'answered' ? (isNewAns(q) ? '새 답' : '읽음') : (q.status === 'asked' ? '답 기다리는 중' : (q.local ? '이 기기에만 모아 둠' : '모아 둠'));
+      return '<span class="st-chip st-' + esc(q.status) + (q.status === 'answered' ? (isNewAns(q) ? ' st-new' : ' st-read') : '') + '">' + t + '</span>';
     }
     function item(q, opts) {
-      var h = '<div class="qi ' + esc(q.status) + '" data-qid="' + esc(q.id) + '">';
+      var h = '<div class="qi ' + esc(q.status) + (q.status === 'answered' && !isNewAns(q) ? ' read' : '') + '" data-qid="' + esc(q.id) + '">';
       if (opts.where) h += '<span class="qi-where">' + esc(q.card_label || '') + (q.card_title ? ' · ' + esc(q.card_title) : '') + '</span>';
       h += '<div class="qi-b">' + esc(q.body) + chip(q) + (q.mine === false && q.asked_by ? '<span class="qi-who">' + esc(q.asked_by.name) + '</span>' : '') + '</div>';
       if (q.status === 'answered' && q.answer) h += '<div class="qi-a">' + fmt(paras(q.answer)[0] || '') + '</div>';
@@ -633,6 +671,18 @@
       var resend = stalled() ? w.filter(function (q) { return q.mine !== false; }) : [];
       var h = '<div class="sh-head"><b>질문함</b><button type="button" data-close="1">닫기</button></div>';
       h += statusNote();
+      var an = a.filter(isNewAns), ar = a.filter(function (q) { return !isNewAns(q); });
+      var onlyNew = S.qf === 'new' && a.length > 0;
+      if (a.length) h += '<div class="qs-filter" role="group" aria-label="보기"><button type="button" data-qf="all"' + (onlyNew ? '' : ' class="on" aria-pressed="true"') + '>전체 ' + all.length + '</button><button type="button" data-qf="new"' + (onlyNew ? ' class="on" aria-pressed="true"' : '') + '>안 읽은 답만 ' + an.length + '</button></div>';
+      if (onlyNew) {
+        if (an.length) h += '<div class="qs-sec">안 읽은 답 ' + an.length + '</div>' + an.map(function (q) { return item(q, { where: 1 }); }).join('') + '<div class="btns"><button type="button" class="btn qa" data-only="1">안 읽은 답만 차례로 넘겨 보기</button><button type="button" class="btn line" data-allread="1">모두 읽음으로</button></div>';
+        else h += '<div class="qs-empty">안 읽은 답이 없어요. 다 읽으셨어요.</div>';
+        h += '<div class="qs-note">읽음 표시는 이 기기에 남아요. 다른 기기에서 읽은 답이 새 답으로 보이면 <b>모두 읽음으로</b>를 누르세요.</div>';
+        qin.innerHTML = h;
+        bindQ(null);
+        qsheet.hidden = false;
+        return;
+      }
       if (!all.length) h += '<div class="qs-empty">아직 남긴 질문이 없어요. 읽다가 궁금한 장에서 아래 <b>질문</b>을 누르세요.</div>';
       if (d.length) h += '<div class="qs-sec">보내기 전 ' + d.length + '</div>' + d.map(function (q) { return item(q, { where: 1 }); }).join('');
       if (w.length) {
@@ -642,7 +692,8 @@
         if (resend.length) h += '<div class="qs-note warn">AI 작업이 이 질문들에 답하지 못하고 끝났어요. 아래 버튼으로 다시 보낼 수 있어요.</div>';
         h += w.map(function (q) { return item(q, { where: 1 }); }).join('');
       }
-      if (a.length) h += '<div class="qs-sec">답 왔어요 ' + a.length + '</div>' + a.slice().reverse().map(function (q) { return item(q, { where: 1 }); }).join('');
+      if (an.length) h += '<div class="qs-sec">새 답 ' + an.length + '</div>' + an.slice().reverse().map(function (q) { return item(q, { where: 1 }); }).join('');
+      if (ar.length) h += '<div class="qs-sec">읽은 답 ' + ar.length + '</div>' + ar.slice().reverse().map(function (q) { return item(q, { where: 1 }); }).join('');
       var sendN = mineDrafts.length + resend.length;
       var label = mineDrafts.length ? '물어보기 · 질문 ' + sendN + '개 AI에게 보내기' : (resend.length ? '다시 보내기 · 답 못 받은 질문 ' + resend.length + '개' : '보낼 질문이 없어요');
       h += '<div class="btns"><button type="button" class="btn primary qa" id="qask"' + (sendN ? '' : ' disabled') + '>' + label + '</button></div>';
@@ -706,7 +757,7 @@
       var n = x ? allQuestions().filter(function (q) { return q.card_ref === anchorOf(x); }).length : 0;
       askBtn.innerHTML = '질문' + (n ? '<i class="dot">' + n + '</i>' : '');
       var d = drafts().length;
-      var news = answered().filter(function (q) { return !S.seenAns[q.id]; }).length;
+      var news = newAnswers().length;
       qboxBtn.innerHTML = '질문함' + (news ? '<i class="dot new">' + news + '</i>' : (d ? '<i class="dot">' + d + '</i>' : ''));
       qboxBtn.setAttribute('aria-label', '질문함' + (d ? ', 모아 둔 질문 ' + d + '개' : '') + (news ? ', 새 답 ' + news + '개' : ''));
     }
